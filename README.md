@@ -1,170 +1,240 @@
-```markdown
-Scroll down to see the `ENGLISH README`
+<h1 align="center">🎬 TikTok FPS Compression Bypasser</h1>
 
-# TikTok FPS Compression Bypasser
+<p align="center">
+Bypass da limitação de FPS do TikTok através da modificação direta do <code>timescale</code> em arquivos MP4.
+</p>
 
-## Sobre o projeto
+<hr>
 
-O TikTok limita a taxa máxima de FPS dos vídeos a 30 fps por padrão, utilizando um **hardware encoder** para acelerar o vídeo internamente. Esse encoder ajusta o tempo do vídeo com base no parâmetro `timescale` presente nos átomos internos do arquivo MP4 (`mvhd` e `mdhd`). O vídeo final é exibido na taxa de quadros original, mas essa aceleração depende diretamente do valor do `timescale`.
+<h2>📌 Sobre o projeto</h2>
 
-Como faço edições no TikTok e quero que minhas edições sejam vistas a 60 fps, criei este método para burlar a compressão automática do TikTok, ajustando diretamente o `timescale` do arquivo para "enganar" o encoder e manter a fluidez original.
+<p>
+O TikTok limita a taxa máxima de quadros dos vídeos para <b>30 FPS</b> por padrão, utilizando um
+<b>hardware encoder</b> que ajusta o tempo do vídeo com base no parâmetro
+<code>timescale</code> presente nos átomos internos do arquivo MP4
+(<code>mvhd</code> e <code>mdhd</code>).
+</p>
 
-## Avisos Importantes
+<p>
+Embora o vídeo final seja exibido na taxa de quadros original, essa aceleração depende diretamente
+do valor do <code>timescale</code>.
+</p>
 
-Com este método, é possível postar vídeos com FPS **ilimitado**, ultrapassando o limite padrão de 30 fps do TikTok. 
+<p>
+Como criador de edições para TikTok e buscando manter vídeos em <b>60 FPS (ou mais)</b>,
+desenvolvi este método para contornar a compressão automática da plataforma,
+ajustando diretamente o <code>timescale</code> do arquivo para enganar o encoder
+e preservar a fluidez original.
+</p>
 
-No entanto, o **playback** desses vídeos vai depender totalmente da potência do hardware do dispositivo do usuário e do decoder do celular. Ou seja, embora o arquivo tenha uma taxa de quadros maior, em dispositivos mais fracos o vídeo pode não rodar suavemente.
+<hr>
 
-Resumindo: o FPS do vídeo no arquivo é ilimitado, mas a reprodução real pode variar conforme o dispositivo.
+<h2>⚠️ Avisos importantes</h2>
 
-Recomendação: usar no máximo 120 fps originais.
+<ul>
+  <li>Este método permite enviar vídeos com FPS <b>acima do limite padrão de 30 FPS</b>.</li>
+  <li>O FPS no arquivo é efetivamente ilimitado.</li>
+  <li>A reprodução final depende totalmente do hardware e do decoder do dispositivo do usuário.</li>
+</ul>
 
+<p>
+Em dispositivos mais fracos, vídeos com FPS muito alto podem não rodar de forma fluida.
+</p>
 
----
+<p>
+<b>Recomendação:</b> utilizar vídeos com até <b>120 FPS</b> de origem.
+</p>
 
-## Histórico e Inspiração
+<hr>
 
-O método antigo de burlar FPS via upload caiu no dia **14 de março de 2025**, e foi aí que comecei a criar um método novo.
+<h2>🧭 Histórico e inspiração</h2>
+
+<p>
+O método antigo de bypass de FPS via upload deixou de funcionar em
+<b>14 de março de 2025</b>. A partir disso, iniciei o desenvolvimento de um novo método.
+</p>
+
+<p>
+A inspiração inicial foi tentar reproduzir o método do
+<a href="https://www.tiktok.com/@nxt_shark537" target="_blank">@nxt_shark537</a>.
+Na época, não havia clareza sobre como ele funcionava. Hoje é sabido que o método utilizava
+<code>ffmpeg</code>:
+</p>
+
+<pre><code>ffmpeg -itsscale 2 -i input.mp4 -c:v copy -c:a copy output.mp4</code></pre>
 
-De início, minha inspiração era tentar fazer um remake do método do @nxt_shark537 no TikTok. Na época, eu não sabia como ele fez o método dele e não tinha pistas nenhuma. Hoje sei que ele usou ffmpeg para isso. ( ffmpeg -itsscale 2 -i input.mp4 -c:v copy -c:a copy output.mp4) 
+<p>
+Como isso não era conhecido inicialmente, segui um caminho diferente,
+focando na modificação direta dos metadados internos do arquivo MP4.
+</p>
 
-Como eu não sabia disso na época, acabei indo por um caminho diferente, focando na modificação dos metadados internos do arquivo MP4. Enquanto o método do nxt_shark537 é feito com ffmpeg, o meu método atua diretamente nos átomos `mvhd` e `mdhd` do arquivo.
+<p>
+Enquanto o método do <code>ffmpeg</code> atua externamente,
+este projeto modifica diretamente os átomos
+<code>mvhd</code> e <code>mdhd</code>.
+</p>
 
----
+<hr>
 
-## Como funciona o método
+<h2>⚙️ Como o método funciona</h2>
 
-O vídeo tem uma taxa de quadros original (por exemplo, 60 fps). O TikTok tenta forçar essa taxa para 30 fps usando um encoder de hardware que acelera o vídeo para caber nesse limite.
+<p>
+O vídeo possui uma taxa de quadros original (ex: 60 FPS).
+O TikTok tenta forçar essa taxa para 30 FPS utilizando um hardware encoder
+que acelera o vídeo.
+</p>
 
-Para contornar isso, o script modifica o valor do `timescale` dentro dos átomos MP4 `mvhd` e `mdhd` com a fórmula:
+<p>
+Para contornar isso, o script ajusta o valor do <code>timescale</code>
+nos átomos MP4 com a seguinte fórmula:
+</p>
 
-```
+<pre><code>Novo timescale = timescale original × (30 / FPS original do vídeo)</code></pre>
 
-Novo timescale = timescale original × (30 / FPS original do vídeo)
+<p>
+Dessa forma, o vídeo é acelerado proporcionalmente,
+mantendo a fluidez original mesmo após a compressão do TikTok.
+</p>
 
-````
+<hr>
 
-Dessa forma, o vídeo é acelerado proporcionalmente para manter a fluidez original mesmo com a compressão do TikTok.
+<h2>🌐 Sobre slow motion no TikTok Web</h2>
+
+<p>
+No <b>TikTok Web (navegador)</b>, vídeos processados com este método
+podem aparentar estar em <b>slow motion</b>.
+</p>
 
----
+<p>
+Isso ocorre porque a versão web utiliza um <b>software encoder</b>,
+que interpreta o <code>timescale</code> de forma diferente do
+hardware encoder presente nos aplicativos móveis.
+</p>
 
-## Sobre o slow motion no TikTok Web
+<p>
+Para observar o efeito correto, recomenda-se assistir aos vídeos
+pelo <b>aplicativo móvel do TikTok</b>.
+</p>
 
-É importante notar que, no **TikTok Web (navegador)**, os vídeos com este patch podem aparecer em **slow motion**. Isso acontece porque a versão web do TikTok utiliza um **software encoder**, que não interpreta o `timescale` da mesma forma que o hardware encoder dos apps móveis.
+<hr>
 
-Portanto, para ver o efeito completo, recomendo assistir seus vídeos editados via **app móvel do TikTok**.
+<h2>▶️ Uso</h2>
 
----
+<ol>
+  <li>Clone ou baixe este repositório.</li>
+  <li>Execute o script via terminal:</li>
+</ol>
 
-## Uso
+<pre><code>python3 patcher.py input.mp4 output.mp4 [scale_factor]</code></pre>
 
-1. Clone ou baixe este repositório.  
-2. Execute o script via terminal:
-    python3 patcher.py input.mp4 output.mp4 [scale_factor]
-````
+<ul>
+  <li><code>input.mp4</code>: arquivo de vídeo original</li>
+  <li><code>output.mp4</code>: arquivo modificado</li>
+  <li><code>scale_factor</code> (opcional): fator manual para ajuste do timescale</li>
+</ul>
 
-* `input.mp4`: arquivo de vídeo original.
-* `output.mp4`: arquivo modificado.
-* `scale_factor` (opcional): fator para ajustar manualmente o timescale (ex: 1.5). Se não fornecido, o script calcula automaticamente baseado na fórmula: (30 / FPS original do vídeo)
+<hr>
 
----
+<h2>👥 Créditos</h2>
 
-## Créditos
+<ul>
+  <li>
+    <a href="https://www.tiktok.com/@lenoz7" target="_blank">Lenoz7</a> (Luís) —
+    Criador do projeto e do script.
+  </li>
+  <li>
+    <a href="https://www.tiktok.com/@poshyler" target="_blank">Poshyler</a> —
+    Colaborador no desenvolvimento da ideia e implementação técnica.
+  </li>
+  <li>
+    <a href="https://www.tiktok.com/@nxt_shark537" target="_blank">nxt_shark537</a> —
+    Inspiração conceitual.
+  </li>
+</ul>
 
-* [Lenoz7](https://www.tiktok.com/@lenoz7) (Luís) — Criador do projeto e script, responsável pelo início do desenvolvimento.
-* [Poshyler](https://www.tiktok.com/@poshyler) — Amigo e colaborador que ajudou a desenvolver a ideia e a implementação técnica.
-* [nxt_shark537](https://www.tiktok.com/@nxt_shark537) — Inspiração para o conceito do método; não participou do desenvolvimento, apenas o conceito foi aproveitado.
+<hr>
 
----
-```
-## Licença
+<h2>📄 Licença</h2>
 
-Este projeto é **open source** e você pode usar, modificar e contribuir livremente.
+<p>
+Este projeto é <b>open source</b>.  
+Você pode usar, modificar e contribuir livremente.
+</p>
 
-```
----------------------------------------------------
-ENGLISH README
----------------------------------------------------
-```markdown
-# TikTok FPS Compression Bypasser
+<hr>
 
-## About the project
+<h1 align="center">🌍 English Version</h1>
 
-TikTok limits the maximum FPS of videos to 30 fps by default, using a **hardware encoder** to internally speed up the video. This encoder adjusts the video timing based on the `timescale` parameter found in the internal atoms of the MP4 file (`mvhd` and `mdhd`). The final video is displayed at the original frame rate, but this speedup depends directly on the value of the `timescale`.
+<p align="center">
+TikTok FPS limit bypass via direct <code>timescale</code> manipulation in MP4 files.
+</p>
 
-Since I make edits on TikTok and want my edits to be seen at 60 fps, I created this method to bypass TikTok’s automatic compression by directly adjusting the file’s `timescale` to "trick" the encoder and keep the original smoothness.
+<hr>
 
-## Important Notices
+<h2>📌 About the project</h2>
 
-With this method, it is possible to upload videos with **unlimited** FPS, surpassing TikTok’s standard 30 fps limit.
+<p>
+TikTok limits video playback to <b>30 FPS</b> by default using a
+<b>hardware encoder</b> that adjusts video timing based on the
+<code>timescale</code> value stored in MP4 atoms
+(<code>mvhd</code> and <code>mdhd</code>).
+</p>
 
-However, the **playback** of these videos will depend entirely on the hardware power of the user’s device and the phone’s decoder. So, even though the file has a higher frame rate, on weaker devices the video might not play smoothly.
+<p>
+Although the video may appear to keep its original frame rate,
+this behavior depends entirely on the <code>timescale</code> value.
+</p>
 
-In summary: the FPS in the video file is unlimited, but the actual playback may vary depending on the device.
+<p>
+This project bypasses TikTok’s automatic compression by modifying
+the internal MP4 metadata, preserving the original smoothness of the video.
+</p>
 
-Recommendation: use a maximum of 120 fps original.
+<hr>
 
----
+<h2>⚠️ Important notices</h2>
 
-## History and Inspiration
+<ul>
+  <li>Allows uploading videos above TikTok’s 30 FPS limit.</li>
+  <li>The FPS stored in the file is effectively unlimited.</li>
+  <li>Actual playback depends on device hardware and decoder.</li>
+</ul>
 
-The old method to bypass FPS via upload stopped working on **March 14, 2025**, and that’s when I started creating a new method.
+<p>
+<b>Recommendation:</b> use videos with up to <b>120 FPS</b>.
+</p>
 
-Initially, my inspiration was to try to remake @nxt_shark537’s TikTok method. At the time, I didn’t know how he did his method and had no clues. Today I know he used ffmpeg for that. ( ffmpeg -itsscale 2 -i input.mp4 -c:v copy -c:a copy output.mp4) 
+<hr>
 
-Since I didn’t know that at the time, I went a different path, focusing on modifying the internal metadata of the MP4 file. While nxt_shark537’s method is done with ffmpeg, my method works directly on the `mvhd` and `mdhd` atoms of the file.
+<h2>⚙️ How it works</h2>
 
----
+<p>
+The script modifies the MP4 <code>timescale</code> value using the formula:
+</p>
 
-## How the method works
+<pre><code>New timescale = original timescale × (30 / original FPS)</code></pre>
 
-The video has an original frame rate (for example, 60 fps). TikTok tries to force this rate to 30 fps using a hardware encoder that speeds up the video to fit this limit.
+<p>
+This tricks TikTok’s hardware encoder into preserving the original smoothness.
+</p>
 
-To circumvent this, the script modifies the `timescale` value inside the MP4 `mvhd` and `mdhd` atoms with the formula:
+<hr>
 
-```
+<h2>▶️ Usage</h2>
 
-New timescale = original timescale × (30 / original FPS of the video)
+<pre><code>python3 patcher.py input.mp4 output.mp4 [scale_factor]</code></pre>
 
-```
+<ul>
+  <li><code>input.mp4</code>: original file</li>
+  <li><code>output.mp4</code>: patched file</li>
+  <li><code>scale_factor</code>: optional manual override</li>
+</ul>
 
-This way, the video is proportionally sped up to keep the original smoothness despite TikTok’s compression.
+<hr>
 
----
+<h2>📄 License</h2>
 
-## About slow motion on TikTok Web
-
-It is important to note that on **TikTok Web (browser)**, videos with this patch might appear in **slow motion**. This happens because TikTok’s web version uses a **software encoder**, which does not interpret the `timescale` the same way the hardware encoder in mobile apps does.
-
-Therefore, to see the full effect, I recommend watching your edited videos via the **TikTok mobile app**.
-
----
-
-## Usage
-
-1. Clone or download this repository.  
-2. Run the script via terminal:
-    python3 patcher.py input.mp4 output.mp4 [scale_factor]
-```
-
-* `input.mp4`: original video file.
-* `output.mp4`: modified file.
-* `scale_factor` (optional): factor to manually adjust the timescale (ex: 1.5). If not provided, the script calculates automatically based on the formula: (30 / original FPS of the video)
-
----
-
-## Credits
-
-* [Lenoz7](https://www.tiktok.com/@lenoz7) (Luís) — Creator of the project and script, responsible for the start of development.
-* [Poshyler](https://www.tiktok.com/@poshyler) — Friend and collaborator who helped develop the idea and technical implementation.
-* [nxt\_shark537](https://www.tiktok.com/@nxt_shark537) — Inspiration for the method’s concept; did not participate in development, only the concept was used.
-
----
-
-```
-## License
-
-This project is **open source** and you can use, modify, and contribute freely.
-
-```
-
+<p>
+This project is <b>open source</b>.  
+Feel free to use, modify and contribute.
+</p>
