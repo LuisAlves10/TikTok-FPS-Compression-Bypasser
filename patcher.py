@@ -1,132 +1,174 @@
 #!/usr/bin/env python3
+import subprocess
 import sys
+
+
+def get_video_fps(video_path):
+    """
+    Detecta o FPS original do vídeo usando ffprobe.
+    Retorna um float ou None se não for possível detectar.
+    """
+
+    try:
+        cmd = [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=r_frame_rate",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            video_path,
+        ]
+        output = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
+        if "/" in output:
+            numerator, denominator = map(int, output.split("/"))
+            return round(numerator / denominator, 2) if denominator else None
+        return float(output)
+    except Exception:
+        return None
+
+
+def get_scale_factor_from_fps(fps):
+    """
+    Calcula o fator usado para reduzir o timescale para o equivalente a 30 FPS.
+    """
+
+    if fps is None or fps <= 0:
+        return None
+    return 30 / fps
+
 
 def patch_atom(atom_name, data, scale_factor=None):
     """
-    Modifica os átomos 'mvhd' ou 'mdhd' dentro do arquivo MP4 para alterar
-    o timescale e a duração, permitindo manipular a velocidade/fps do vídeo.
+    Modifica os átomos "mvhd" ou "mdhd" dentro do arquivo MP4 para ajustar
+    o timescale. A duração é mantida para preservar o comportamento esperado
+    do método de bypass.
 
     Parâmetros:
-    - atom_name: string, nome do átomo a ser modificado ('mvhd' ou 'mdhd').
-    - data: bytearray, conteúdo binário do arquivo MP4.
-    - scale_factor: float ou None, fator de escala para ajustar timescale e duração.
-      Se None, calcula automaticamente com base no timescale original.
+    - atom_name: nome do átomo a ser modificado ("mvhd" ou "mdhd")
+    - data: conteúdo binário do arquivo MP4 em um bytearray
+    - scale_factor: fator manual para ajustar o timescale
 
     Retorna:
-    - count: int, número de átomos modificados.
+    - count: número de átomos modificados
     """
 
     count = 0
     start = 0
-    atom_bytes = atom_name.encode('utf-8')  # converte o nome do átomo para bytes
+    atom_bytes = atom_name.encode("utf-8")
 
     while True:
-        # procura pelo átomo no arquivo, começando do índice 'start'
         found = data.find(atom_bytes, start)
         if found == -1:
-            # não encontrou mais ocorrências do átomo
             break
 
-        header_offset = found - 4  # posição do tamanho do box antes do nome do átomo
+        header_offset = found - 4
         if header_offset < 0:
-            # posição inválida, pula pra próxima busca
             start = found + 4
             continue
 
-        # lê o tamanho do box (área do átomo) em bytes (4 bytes big endian)
-        box_size = int.from_bytes(data[header_offset:header_offset+4], 'big')
+        box_size = int.from_bytes(data[header_offset : header_offset + 4], "big")
         if box_size < 8:
-            # box inválido (tamanho muito pequeno), pula
             start = found + 4
             continue
 
-        version = data[header_offset + 8]  # lê a versão do átomo (byte 8 após header)
-        
+        version = data[header_offset + 8]
+
         if version == 0:
-            # Para versão 0, timescale e duration são 4 bytes cada, em offsets fixos
             timescale_offset = header_offset + 20
             duration_offset = header_offset + 24
 
-            # verifica se há espaço suficiente para modificar duration
             if duration_offset + 4 > header_offset + box_size:
                 start = found + 4
                 continue
 
-            # lê valores antigos (4 bytes cada)
-            old_timescale = int.from_bytes(data[timescale_offset:timescale_offset+4], 'big')
-            old_duration = int.from_bytes(data[duration_offset:duration_offset+4], 'big')
+            old_timescale = int.from_bytes(data[timescale_offset : timescale_offset + 4], "big")
+            old_duration = int.from_bytes(data[duration_offset : duration_offset + 4], "big")
 
-            # calcula o fator de escala: usa o fornecido ou padrão (30000 / old_timescale)
-            chosen_scale = scale_factor or (30000 / old_timescale)
-            new_timescale = int(old_timescale * chosen_scale)
-            new_duration = int(old_duration * chosen_scale)
+            if old_timescale == 0 or scale_factor is None:
+                start = found + 4
+                continue
 
-            # substitui os bytes originais pelos novos valores
-            data[timescale_offset:timescale_offset+4] = new_timescale.to_bytes(4, 'big')
-            data[duration_offset:duration_offset+4] = new_duration.to_bytes(4, 'big')
+            new_timescale = max(1, int(old_timescale * scale_factor))
+            data[timescale_offset : timescale_offset + 4] = new_timescale.to_bytes(4, "big")
 
-            print(f"Patched {atom_name} at offset {header_offset}: timescale {old_timescale}->{new_timescale}, duration {old_duration}->{new_duration}")
+            print(
+                f"Patched {atom_name} at offset {header_offset}: "
+                f"timescale {old_timescale}->{new_timescale}, duração mantida {old_duration}"
+            )
             count += 1
 
         elif version == 1:
-            # Para versão 1, timescale é 4 bytes, duration é 8 bytes, em offsets diferentes
             timescale_offset = header_offset + 28
             duration_offset = header_offset + 32
 
-            # verifica espaço para duration de 8 bytes
             if duration_offset + 8 > header_offset + box_size:
                 start = found + 4
                 continue
 
-            old_timescale = int.from_bytes(data[timescale_offset:timescale_offset+4], 'big')
-            old_duration = int.from_bytes(data[duration_offset:duration_offset+8], 'big')
+            old_timescale = int.from_bytes(data[timescale_offset : timescale_offset + 4], "big")
+            old_duration = int.from_bytes(data[duration_offset : duration_offset + 8], "big")
 
-            chosen_scale = scale_factor or (30000 / old_timescale)
-            new_timescale = int(old_timescale * chosen_scale)
-            new_duration = int(old_duration * chosen_scale)
+            if old_timescale == 0 or scale_factor is None:
+                start = found + 4
+                continue
 
-            data[timescale_offset:timescale_offset+4] = new_timescale.to_bytes(4, 'big')
-            data[duration_offset:duration_offset+8] = new_duration.to_bytes(8, 'big')
+            new_timescale = max(1, int(old_timescale * scale_factor))
+            data[timescale_offset : timescale_offset + 4] = new_timescale.to_bytes(4, "big")
 
-            print(f"Patched {atom_name} at offset {header_offset}: timescale {old_timescale}->{new_timescale}, duration {old_duration}->{new_duration}")
+            print(
+                f"Patched {atom_name} at offset {header_offset}: "
+                f"timescale {old_timescale}->{new_timescale}, duração mantida {old_duration}"
+            )
             count += 1
         else:
-            # versão desconhecida, não modifica
-            print(f"Found {atom_name} at offset {header_offset} with unknown version {version}; skipping.")
+            print(
+                f"Found {atom_name} at offset {header_offset} "
+                f"with unknown version {version}; skipping."
+            )
 
-        start = found + 4  # continua procurando após o último átomo encontrado
+        start = found + 4
 
     return count
 
+
 def patch_mp4(input_filename, output_filename, scale_factor=None):
     """
-    Abre um arquivo MP4, modifica os átomos 'mvhd' e 'mdhd' para ajustar fps/timescale,
-    e salva o arquivo modificado.
+    Abre um arquivo MP4, modifica os átomos "mvhd" e "mdhd" para ajustar o
+    timescale e salva o arquivo modificado.
 
-    Parâmetros:
-    - input_filename: string, caminho do arquivo MP4 original.
-    - output_filename: string, caminho para salvar o arquivo modificado.
-    - scale_factor: float ou None, fator de escala para ajuste (opcional).
+    Se nenhum fator for fornecido, o script tenta detectar o FPS original e
+    calcular automaticamente o fator equivalente a 30 / FPS.
     """
 
-    with open(input_filename, 'rb') as f:
-        data = bytearray(f.read())  # lê o arquivo inteiro em memória como bytearray mutável
+    with open(input_filename, "rb") as file_handle:
+        data = bytearray(file_handle.read())
 
-    # modifica os átomos 'mvhd' e 'mdhd'
+    if scale_factor is None:
+        detected_fps = get_video_fps(input_filename)
+        scale_factor = get_scale_factor_from_fps(detected_fps)
+        if scale_factor is None:
+            raise RuntimeError("Não foi possível detectar o FPS original do vídeo.")
+
+        print(f"Detected FPS: {detected_fps}")
+        print(f"Using scale factor: {scale_factor}")
+
     patched_mvhd = patch_atom("mvhd", data, scale_factor)
     patched_mdhd = patch_atom("mdhd", data, scale_factor)
 
     total_patched = patched_mvhd + patched_mdhd
     print(f"\nTotal patched atoms: {total_patched}")
 
-    # escreve o arquivo modificado
-    with open(output_filename, 'wb') as f:
-        f.write(data)
+    with open(output_filename, "wb") as file_handle:
+        file_handle.write(data)
 
     print(f"Patched file written to: {output_filename}")
 
+
 if __name__ == "__main__":
-    # Verifica argumentos de linha de comando
     if len(sys.argv) < 3:
         print("Usage: patch_mp4.py input.mp4 output.mp4 [scale_factor (optional)]")
         sys.exit(1)
@@ -135,7 +177,6 @@ if __name__ == "__main__":
     output_file = sys.argv[2]
     factor = None
 
-    # tenta converter o scale_factor se fornecido
     if len(sys.argv) > 3:
         try:
             factor = float(sys.argv[3])
