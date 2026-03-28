@@ -1,7 +1,7 @@
 <h1 align="center">🎬 TikTok FPS Compression Bypasser</h1>
 
 <p align="center">
-Bypass da limitação de FPS do TikTok através da modificação direta do <code>timescale</code> em arquivos MP4.
+Bypass da limitação de FPS do TikTok por meio da modificação direta do <code>timescale</code> em arquivos MP4.
 </p>
 
 <hr>
@@ -16,12 +16,12 @@ O TikTok limita a taxa máxima de quadros dos vídeos para <b>30 FPS</b> por pad
 </p>
 
 <p>
-Embora o vídeo final seja exibido na taxa de quadros original, essa aceleração depende diretamente
+Embora o vídeo final possa ser exibido na taxa de quadros original, esse comportamento depende diretamente
 do valor do <code>timescale</code>.
 </p>
 
 <p>
-Como criador de edições para TikTok e buscando manter vídeos em <b>60 FPS (ou mais)</b>,
+Como criador de edições para TikTok e buscando manter vídeos em <b>60 FPS ou mais</b>,
 desenvolvi este método para contornar a compressão automática da plataforma,
 ajustando diretamente o <code>timescale</code> do arquivo para enganar o encoder
 e preservar a fluidez original.
@@ -33,7 +33,7 @@ e preservar a fluidez original.
 
 <ul>
   <li>Este método permite enviar vídeos com FPS <b>acima do limite padrão de 30 FPS</b>.</li>
-  <li>O FPS no arquivo é efetivamente ilimitado.</li>
+  <li>O FPS registrado no arquivo é, na prática, ilimitado.</li>
   <li>A reprodução final depende totalmente do hardware e do decoder do dispositivo do usuário.</li>
 </ul>
 
@@ -69,7 +69,7 @@ focando na modificação direta dos metadados internos do arquivo MP4.
 </p>
 
 <p>
-Enquanto o método do <code>ffmpeg</code> atua externamente,
+Enquanto o método com <code>ffmpeg</code> atua externamente,
 este projeto modifica diretamente os átomos
 <code>mvhd</code> e <code>mdhd</code>.
 </p>
@@ -79,8 +79,8 @@ este projeto modifica diretamente os átomos
 <h2>⚙️ Como o método funciona</h2>
 
 <p>
-O vídeo possui uma taxa de quadros original (ex: 60 FPS).
-O TikTok tenta forçar essa taxa para 30 FPS utilizando um hardware encoder
+O vídeo possui uma taxa de quadros original, por exemplo, <b>60 FPS</b>.
+O TikTok tenta forçar essa taxa para <b>30 FPS</b> utilizando um hardware encoder
 que acelera o vídeo.
 </p>
 
@@ -118,20 +118,69 @@ pelo <b>aplicativo móvel do TikTok</b>.
 
 <hr>
 
+<h2>📁 Estrutura atual do projeto</h2>
+
+<p>
+Os arquivos principais do projeto ficam na raiz do repositório:
+</p>
+
+<ul>
+  <li><code>patcher.py</code> — código-fonte open source da versão em linha de comando</li>
+  <li><code>TikTokFPSCompressionBypasser.exe</code> — executável atual com interface gráfica</li>
+  <li><code>mp4_patcher.exe</code> — executável legado</li>
+  <li><code>README.md</code> e <code>LICENSE</code></li>
+  <li>arquivos do Git, como <code>.git</code> e <code>.gitignore</code></li>
+</ul>
+
+<p>
+Todo o restante do desenvolvimento, build, assets e arquivos auxiliares fica em:
+</p>
+
+<pre><code>app_dev/</code></pre>
+
+<hr>
+
 <h2>▶️ Uso</h2>
 
-<ol>
-  <li>Clone ou baixe este repositório.</li>
-  <li>Execute o script via terminal:</li>
-</ol>
+<p>
+Para usar o código-fonte via terminal:
+</p>
 
-<pre><code>python3 patcher.py input.mp4 output.mp4 [scale_factor]</code></pre>
+<pre><code>python patcher.py input.mp4 output.mp4 [scale_factor]</code></pre>
 
 <ul>
   <li><code>input.mp4</code>: arquivo de vídeo original</li>
   <li><code>output.mp4</code>: arquivo modificado</li>
-  <li><code>scale_factor</code> (opcional): fator manual para ajuste do timescale</li>
+  <li><code>scale_factor</code> (opcional): fator manual para ajuste do <code>timescale</code></li>
 </ul>
+
+<p>
+Se o <code>scale_factor</code> não for informado, o script tenta detectar automaticamente o FPS original do vídeo.
+</p>
+
+<p>
+Para usar a interface gráfica no Windows, execute:
+</p>
+
+<pre><code>TikTokFPSCompressionBypasser.exe</code></pre>
+
+<hr>
+
+<h2>🛠️ Rebuild do executável</h2>
+
+<p>
+Os scripts de build ficam em:
+</p>
+
+<pre><code>app_dev/build_tools/</code></pre>
+
+<p>
+Comandos:
+</p>
+
+<pre><code>python app_dev/build_tools/build_release.py
+app_dev\build_tools\build_release.bat
+.\app_dev\build_tools\build_release.ps1</code></pre>
 
 <hr>
 
@@ -140,15 +189,15 @@ pelo <b>aplicativo móvel do TikTok</b>.
 <ul>
   <li>
     <a href="https://www.tiktok.com/@lenoz7" target="_blank">Lenoz7</a> (Luís) —
-    Criador do projeto e do script.
+    criador do projeto e do script.
   </li>
   <li>
     <a href="https://www.tiktok.com/@poshyler" target="_blank">Poshyler</a> —
-    Colaborador no desenvolvimento da ideia e implementação técnica.
+    colaborador no desenvolvimento da ideia e na implementação técnica.
   </li>
   <li>
     <a href="https://www.tiktok.com/@nxt_shark537" target="_blank">nxt_shark537</a> —
-    Inspiração conceitual.
+    inspiração conceitual.
   </li>
 </ul>
 
@@ -157,8 +206,7 @@ pelo <b>aplicativo móvel do TikTok</b>.
 <h2>📄 Licença</h2>
 
 <p>
-Este projeto é <b>open source</b>.  
-Você pode usar, modificar e contribuir livremente.
+Este projeto é <b>open source</b>. Você pode usar, modificar e contribuir livremente.
 </p>
 
 <hr>
@@ -181,7 +229,7 @@ TikTok limits video playback to <b>30 FPS</b> by default using a
 </p>
 
 <p>
-Although the video may appear to keep its original frame rate,
+Although the final video may appear to preserve its original frame rate,
 this behavior depends entirely on the <code>timescale</code> value.
 </p>
 
@@ -195,13 +243,13 @@ the internal MP4 metadata, preserving the original smoothness of the video.
 <h2>⚠️ Important notices</h2>
 
 <ul>
-  <li>Allows uploading videos above TikTok’s 30 FPS limit.</li>
-  <li>The FPS stored in the file is effectively unlimited.</li>
-  <li>Actual playback depends on device hardware and decoder.</li>
+  <li>Allows uploading videos above TikTok’s default 30 FPS limit.</li>
+  <li>The FPS recorded in the file is effectively unlimited.</li>
+  <li>Actual playback depends on device hardware and decoder behavior.</li>
 </ul>
 
 <p>
-<b>Recommendation:</b> use videos with up to <b>120 FPS</b>.
+<b>Recommendation:</b> use source videos with up to <b>120 FPS</b>.
 </p>
 
 <hr>
@@ -220,9 +268,31 @@ This tricks TikTok’s hardware encoder into preserving the original smoothness.
 
 <hr>
 
+<h2>📁 Project structure</h2>
+
+<p>
+The main public-facing files stay at the repository root:
+</p>
+
+<ul>
+  <li><code>patcher.py</code> — open-source command-line source code</li>
+  <li><code>TikTokFPSCompressionBypasser.exe</code> — current GUI executable</li>
+  <li><code>mp4_patcher.exe</code> — legacy executable</li>
+  <li><code>README.md</code> and <code>LICENSE</code></li>
+  <li>Git files such as <code>.git</code> and <code>.gitignore</code></li>
+</ul>
+
+<p>
+All development, build, assets and support files stay in:
+</p>
+
+<pre><code>app_dev/</code></pre>
+
+<hr>
+
 <h2>▶️ Usage</h2>
 
-<pre><code>python3 patcher.py input.mp4 output.mp4 [scale_factor]</code></pre>
+<pre><code>python patcher.py input.mp4 output.mp4 [scale_factor]</code></pre>
 
 <ul>
   <li><code>input.mp4</code>: original file</li>
@@ -230,11 +300,20 @@ This tricks TikTok’s hardware encoder into preserving the original smoothness.
   <li><code>scale_factor</code>: optional manual override</li>
 </ul>
 
+<p>
+If <code>scale_factor</code> is omitted, the script attempts to detect the original FPS automatically.
+</p>
+
+<p>
+On Windows, you can also use the GUI executable:
+</p>
+
+<pre><code>TikTokFPSCompressionBypasser.exe</code></pre>
+
 <hr>
 
 <h2>📄 License</h2>
 
 <p>
-This project is <b>open source</b>.  
-Feel free to use, modify and contribute.
+This project is <b>open source</b>. Feel free to use, modify and contribute.
 </p>
