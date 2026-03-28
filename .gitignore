@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.c
+.pyarmor/
+build/
+dist/
+release/
+obfuscated/
+*.spec.bak

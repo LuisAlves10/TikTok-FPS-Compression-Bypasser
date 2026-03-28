@@ -1,0 +1,7 @@
+Cython>=3.0
+PyInstaller>=6.0
+customtkinter>=5.2
+tkinterdnd2>=0.4
+pyarmor>=9.0
+python-minifier>=3.0
+Pillow>=10.0
