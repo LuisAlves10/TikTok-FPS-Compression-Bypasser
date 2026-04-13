@@ -10,6 +10,7 @@ import webbrowser
 from datetime import datetime
 
 import customtkinter as ctk
+from customtkinter.windows.widgets.core_rendering.ctk_canvas import CTkCanvas
 from tkinter import filedialog, messagebox
 
 from .localization import TRANSLATIONS, detect_language
@@ -24,6 +25,48 @@ except Exception:
     DND_FILES = None
     DND_BASE = ctk.CTk
     DND_AVAILABLE = False
+
+
+def _normalize_tk_dimension(value):
+    if isinstance(value, (int, float)):
+        return int(round(value))
+
+    if isinstance(value, str):
+        try:
+            return str(int(round(float(value))))
+        except ValueError:
+            return value
+
+    return value
+
+
+def _patch_customtkinter_canvas_dimensions():
+    if getattr(CTkCanvas, "_lenoz7_dimension_patch", False):
+        return
+
+    original_init = CTkCanvas.__init__
+    original_configure = CTkCanvas.configure
+
+    def _normalize_kwargs(kwargs):
+        normalized = dict(kwargs)
+        for key in ("width", "height", "bd", "borderwidth", "highlightthickness"):
+            if key in normalized:
+                normalized[key] = _normalize_tk_dimension(normalized[key])
+        return normalized
+
+    def patched_init(self, *args, **kwargs):
+        original_init(self, *args, **_normalize_kwargs(kwargs))
+
+    def patched_configure(self, *args, **kwargs):
+        return original_configure(self, *args, **_normalize_kwargs(kwargs))
+
+    CTkCanvas.__init__ = patched_init
+    CTkCanvas.configure = patched_configure
+    CTkCanvas.config = patched_configure
+    CTkCanvas._lenoz7_dimension_patch = True
+
+
+_patch_customtkinter_canvas_dimensions()
 
 
 def human_size(num):
